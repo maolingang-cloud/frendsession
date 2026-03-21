@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@frendseesion/shared": ["packages/shared/src/index.ts"],
+      "@frendseesion/shared/*": ["packages/shared/src/*"],
+      "@frendseesion/ui": ["packages/ui/src/index.ts"],
+      "@frendseesion/ui/*": ["packages/ui/src/*"]
+    }
+  }
+}

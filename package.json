@@ -1,0 +1,22 @@
+{
+  "name": "frendseesion",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @frendseesion/api --filter @frendseesion/realtime --filter @frendseesion/web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "dev:web": "pnpm --filter @frendseesion/web dev",
+    "dev:api": "pnpm --filter @frendseesion/api dev",
+    "dev:realtime": "pnpm --filter @frendseesion/realtime dev",
+    "infra:up": "docker compose -f infra/docker/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker/docker-compose.yml down",
+    "prisma:generate": "pnpm --filter @frendseesion/api prisma generate"
+  }
+}

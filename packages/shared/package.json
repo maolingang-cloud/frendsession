@@ -1,0 +1,17 @@
+{
+  "name": "@frendseesion/shared",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "node -e \"const fs=require('fs');fs.mkdirSync('.tmp-check',{recursive:true});fs.writeFileSync('.tmp-check/package.json', JSON.stringify({type:'commonjs'}));\" && tsc --module commonjs --moduleResolution node --target ES2022 --outDir .tmp-check src/session-machine.check.ts src/session-machine.ts src/contracts.ts && node .tmp-check/session-machine.check.js"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.1",
+    "typescript": "^5.7.2"
+  }
+}

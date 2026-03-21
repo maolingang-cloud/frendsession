@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionState {
+  WAITING_FOR_GUEST @map("waiting_for_guest")
+  FREE_TEXT         @map("free_text")
+  PENDING_PAYMENT   @map("pending_payment")
+  PAID_MEDIA        @map("paid_media")
+  FREE_TEXT_RETURN  @map("free_text_return")
+  EXPIRED           @map("expired")
+}
+
+enum SessionCapability {
+  TEXT          @map("text")
+  IMAGE_MESSAGE @map("image_message")
+  VIDEO_MESSAGE @map("video_message")
+  AUDIO_CALL    @map("audio_call")
+  VIDEO_CALL    @map("video_call")
+}
+
+enum ParticipantRole {
+  INITIATOR @map("initiator")
+  GUEST     @map("guest")
+  SYSTEM    @map("system")
+}
+
+enum MessageType {
+  TEXT            @map("text")
+  IMAGE           @map("image")
+  VIDEO           @map("video")
+  SYSTEM          @map("system")
+  PAYMENT_REQUEST @map("payment_request")
+}
+
+enum PaymentStatus {
+  PENDING @map("pending")
+  PAID    @map("paid")
+  EXPIRED @map("expired")
+}
+
+enum TimerWindowKind {
+  FREE @map("free")
+  PAID @map("paid")
+}
+
+model User {
+  id          String        @id
+  phone       String        @unique
+  displayName String
+  createdAt   DateTime      @default(now())
+  sessions    ChatSession[] @relation("InitiatorSessions")
+
+  @@index([createdAt])
+}
+
+model ChatSession {
+  id                   String            @id
+  initiatorId          String
+  initiatorDisplayName String
+  joinToken            String            @unique
+  joinUrl              String
+  state                SessionState
+  currentWindowKind    TimerWindowKind?
+  currentWindowStartsAt DateTime?
+  currentWindowEndsAt   DateTime?
+  enabledCapabilities  Json
+  pendingQuoteId       String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  guest                GuestParticipant?
+  messages             Message[]
+  quotes               PaymentQuote[]
+  orders               PaymentOrder[]
+  initiator            User              @relation("InitiatorSessions", fields: [initiatorId], references: [id])
+
+  @@index([initiatorId, createdAt])
+  @@index([state, updatedAt])
+  @@index([pendingQuoteId])
+}
+
+model GuestParticipant {
+  id          String      @id
+  sessionId   String      @unique
+  displayName String
+  joinedAt    DateTime    @default(now())
+  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([joinedAt])
+}
+
+model Message {
+  id             String           @id
+  sessionId       String
+  senderId        String
+  senderRole      ParticipantRole
+  type            MessageType
+  text            String?
+  mediaUrl        String?
+  previewUrl      String?
+  paymentQuoteId  String?
+  createdAt       DateTime         @default(now())
+  session         ChatSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  paymentQuote    PaymentQuote?    @relation(fields: [paymentQuoteId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId, createdAt])
+  @@index([paymentQuoteId])
+}
+
+model PaymentQuote {
+  id              String         @id
+  sessionId        String
+  capabilities     Json
+  durationMinutes  Int
+  amountCents      Int
+  qrPayload        String
+  status           PaymentStatus
+  createdAt        DateTime       @default(now())
+  session          ChatSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  orders           PaymentOrder[]
+  messages         Message[]
+
+  @@index([sessionId, createdAt])
+  @@index([status, createdAt])
+}
+
+model PaymentOrder {
+  id          String         @id
+  sessionId    String
+  quoteId      String
+  amountCents  Int
+  status       PaymentStatus
+  paidAt       DateTime?
+  createdAt    DateTime       @default(now())
+  session      ChatSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  quote        PaymentQuote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@index([quoteId])
+  @@index([status, createdAt])
+}
