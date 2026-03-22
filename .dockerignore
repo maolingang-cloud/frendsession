@@ -1,0 +1,12 @@
+node_modules
+.git
+.next
+dist
+.runtime-logs
+.npm-cache
+coverage
+.turbo
+.tmp-check
+infra/docker/data
+apps/api/prisma/dev.db
+apps/api/prisma/dev.db-journal

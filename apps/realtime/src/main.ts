@@ -17,14 +17,27 @@ type Presence = {
   socketId: string;
 };
 
+function parseCorsOrigins() {
+  const raw = process.env.CORS_ORIGIN?.trim();
+  if (!raw) {
+    return "*";
+  }
+
+  return raw.split(",").map((origin) => origin.trim()).filter(Boolean);
+}
+
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: parseCorsOrigins()
+  })
+);
 app.use(express.json());
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "*"
+    origin: parseCorsOrigins()
   }
 });
 

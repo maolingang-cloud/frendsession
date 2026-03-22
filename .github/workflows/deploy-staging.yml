@@ -1,0 +1,71 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Validate Web Build
+        run: npm run build --workspace @frendseesion/web
+
+      - name: Validate API Types
+        run: npm exec tsc -- -p apps/api/tsconfig.json --noEmit
+
+      - name: Validate Realtime Types
+        run: npm exec tsc -- -p apps/realtime/tsconfig.json --noEmit
+
+      - name: Configure SSH
+        env:
+          STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_PORT: ${{ secrets.STAGING_SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$STAGING_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${STAGING_SSH_PORT:-22}" "$STAGING_SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync Repository To Server
+        env:
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_PORT: ${{ secrets.STAGING_SSH_PORT }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_APP_DIR: ${{ secrets.STAGING_APP_DIR }}
+        run: |
+          rsync -az --delete \
+            --exclude ".git" \
+            --exclude "node_modules" \
+            --exclude ".next" \
+            --exclude "dist" \
+            --exclude ".runtime-logs" \
+            --exclude "deploy/.env.staging" \
+            -e "ssh -p ${STAGING_SSH_PORT:-22}" \
+            ./ "${STAGING_SSH_USER}@${STAGING_SSH_HOST}:${STAGING_APP_DIR}/"
+
+      - name: Restart Staging Stack
+        env:
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_PORT: ${{ secrets.STAGING_SSH_PORT }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_APP_DIR: ${{ secrets.STAGING_APP_DIR }}
+        run: |
+          ssh -p "${STAGING_SSH_PORT:-22}" "${STAGING_SSH_USER}@${STAGING_SSH_HOST}" \
+            "APP_DIR='${STAGING_APP_DIR}' bash '${STAGING_APP_DIR}/deploy/scripts/remote-up.sh'"

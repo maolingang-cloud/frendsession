@@ -1,0 +1,22 @@
+{$APP_DOMAIN} {
+  encode gzip zstd
+
+  @api path /api/*
+  handle_path @api {
+    reverse_proxy api:3301
+  }
+
+  @socket path /socket.io/*
+  handle @socket {
+    reverse_proxy realtime:3302
+  }
+
+  @media path /media/*
+  handle_path @media {
+    reverse_proxy minio:9000
+  }
+
+  handle {
+    reverse_proxy web:3000
+  }
+}

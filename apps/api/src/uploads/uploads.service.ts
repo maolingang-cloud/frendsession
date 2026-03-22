@@ -11,7 +11,9 @@ export class UploadsService {
     const key = `${new Date().toISOString().slice(0, 10)}/${this.storeService.createId("upload")}-${sanitize(
       fileName
     )}`;
-    const baseUrl = `http://${process.env.MINIO_ENDPOINT ?? "localhost"}:${process.env.MINIO_PORT ?? "9000"}/${bucket}`;
+    const baseUrl =
+      process.env.MINIO_PUBLIC_BASE_URL?.trim() ||
+      `http://${process.env.MINIO_ENDPOINT ?? "localhost"}:${process.env.MINIO_PORT ?? "9000"}/${bucket}`;
 
     return {
       key,

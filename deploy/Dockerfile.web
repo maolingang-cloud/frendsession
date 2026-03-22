@@ -1,0 +1,40 @@
+FROM node:20-bookworm-slim
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/api/package.json apps/api/package.json
+COPY apps/realtime/package.json apps/realtime/package.json
+COPY packages/shared/package.json packages/shared/package.json
+COPY packages/ui/package.json packages/ui/package.json
+
+RUN npm ci
+
+COPY . .
+
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_REALTIME_URL
+ARG NEXT_PUBLIC_APP_URL
+ARG NEXT_PUBLIC_STUN_URL
+ARG NEXT_PUBLIC_TURN_URL
+ARG NEXT_PUBLIC_TURN_USERNAME
+ARG NEXT_PUBLIC_TURN_CREDENTIAL
+
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_REALTIME_URL=${NEXT_PUBLIC_REALTIME_URL}
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+ENV NEXT_PUBLIC_STUN_URL=${NEXT_PUBLIC_STUN_URL}
+ENV NEXT_PUBLIC_TURN_URL=${NEXT_PUBLIC_TURN_URL}
+ENV NEXT_PUBLIC_TURN_USERNAME=${NEXT_PUBLIC_TURN_USERNAME}
+ENV NEXT_PUBLIC_TURN_CREDENTIAL=${NEXT_PUBLIC_TURN_CREDENTIAL}
+
+RUN npm run build --workspace @frendseesion/web
+
+WORKDIR /app/apps/web
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start"]
