@@ -13,13 +13,13 @@ services:
     environment:
       APP_DOMAIN: ${APP_DOMAIN}
     volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
 
   web:
     build:
-      context: .
+      context: ..
       dockerfile: deploy/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
@@ -38,7 +38,7 @@ services:
 
   api:
     build:
-      context: .
+      context: ..
       dockerfile: deploy/Dockerfile.api
     restart: unless-stopped
     depends_on:
@@ -63,7 +63,7 @@ services:
 
   realtime:
     build:
-      context: .
+      context: ..
       dockerfile: deploy/Dockerfile.realtime
     restart: unless-stopped
     environment:
