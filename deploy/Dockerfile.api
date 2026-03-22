@@ -1,7 +1,5 @@
 FROM node:20-bookworm-slim
 
-ENV NODE_ENV=production
-
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -11,12 +9,14 @@ COPY apps/realtime/package.json apps/realtime/package.json
 COPY packages/shared/package.json packages/shared/package.json
 COPY packages/ui/package.json packages/ui/package.json
 
-RUN npm ci
+RUN npm ci --include=dev
 
 COPY . .
 
 WORKDIR /app/apps/api
 
 EXPOSE 3301
+
+ENV NODE_ENV=production
 
 CMD ["npm", "run", "start:runtime"]
